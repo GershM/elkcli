@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
 from rich import print
-from elk.elastic import *
-import constants as const
-import globals_
-import click
-from utils.compleater import elkcliCompleater
-from utils.keybindings import *
-from utils.toolbar import create_toolbar_tokens_func
-from utils.spinner import ElkSpinner
+from pathlib import Path
 
 from prompt_toolkit import PromptSession, prompt
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
-from pathlib import Path
+import elkcli.constants as const
+from elkcli.utils.compleater import ElkcliCompleater
+from elkcli.utils.keybindings import *
+from elkcli.utils.toolbar import create_toolbar_tokens_func
+from elkcli.utils.spinner import ElkSpinner
+from elkcli.elk.elastic import *
+from elkcli.shell.commands import *
+import elkcli.globals as g
 
-from shell.commands import *
 
 # INFO:
 # https://python-prompt-toolkit.readthedocs.io/
@@ -23,13 +22,14 @@ class ElkCliPrompt:
     """
     Elastic Search CLI using prompt_toolkit
     """
+
     def __init__(self):
         self.__prepare_commands()
         self.key_bindings = EditingMode.EMACS
         self.toolbar_error_message = None
         self.completion_refresher = None
         self.__spinner = ElkSpinner()
-
+        self.query_mode = "EQL"
 
     def __prepare_commands(self):
         """
@@ -42,15 +42,15 @@ class ElkCliPrompt:
             Nothing
         """
         self.commands = {
-            "search": searchCommand(),
-            "snapshot": snapshotCommand(),
-            "tail": tailCommand(),
-            "options": optionsCommand(),
-            "set": setCommand(),
-            "exit": exitCommand()
+            "search": SearchCommand(),
+            "snapshot": SnapshotCommand(),
+            "tail": TailCommand(),
+            "options": OptionsCommand(),
+            "set": SetCommand(),
+            "exit": ExitCommand(),
         }
 
-        self.commands["help"] = helpCommand(self.commands)
+        self.commands["help"] = HelpCommand(self.commands)
 
     def connect(self, args):
         """
@@ -62,7 +62,6 @@ class ElkCliPrompt:
         Returns:
             Nothing
         """
-
 
         print(const.BANNER)
 
@@ -78,16 +77,26 @@ class ElkCliPrompt:
                 if not password:
                     continue
 
-                functions = [lambda: connect(args.username, password, args.host, args.port, args.insecure)]
-                self.__spinner.start(functions, "Connecting...", "Connected!", "Failed to connect!")
-                if globals_.elk and globals_.elk.connected:
+                functions = [
+                    lambda: connect(
+                        args.username, password, args.host, args.port, args.insecure
+                    )
+                ]
+                self.__spinner.start(
+                    functions, "Connecting...", "Connected!", "Failed to connect!"
+                )
+                print("test1")
+                if g.ELK and g.ELK.connected:
+                    print("Connected to Elastic Search")
                     break
+                print("Failed to connect")
 
             except KeyboardInterrupt:
                 exit(0)
             except EOFError:
                 exit(0)
-            except Exception:
+            except Exception as e:
+                print(e)
                 retries += 1
                 if retries > 3:
                     print("Too many retries")
@@ -106,13 +115,14 @@ class ElkCliPrompt:
         Returns:
             Nothing
         """
-        if not globals_.elk:
+        if not g.ELK:
             return "Not Connected"
 
         index = ""
-        if globals_.elk.index:
-            index = " ({})".format(globals_.elk.index)
-        url = "{}".format(globals_.elk.url)
+        if g.ELK.index:
+            index = " ({})".format(g.ELK.index)
+
+        url = "{}".format(g.ELK.url)
 
         return f"{url}{index}: "
 
@@ -126,7 +136,7 @@ class ElkCliPrompt:
         Returns:
             Nothing
         """
-        if not globals_.elk or not commands:
+        if not g.ELK or not commands:
             return
 
         cmds = commands.split()
@@ -138,7 +148,7 @@ class ElkCliPrompt:
     def __elkInfo(self):
         """
         Get the Elastic Search info
-            
+
         Args:
             None
 
@@ -146,19 +156,20 @@ class ElkCliPrompt:
             Nothing
         """
 
-        if not globals_.elk: return
+        if not g.ELK:
+            return
 
-        info = globals_.elk.info()
-        if not info: return  
+        info = g.ELK.info()
+        if not info:
+            return
 
-        header ="Elastic Search Info:"
+        header = "Elastic Search Info:"
         version = "Version: {}".format(info["version"]["number"])
         name = "Name: {}".format(info["cluster_name"])
 
         elkinfo = f"{header.center(80)}\n{version.center(80)}\n{name.center(80)}"
         print(elkinfo)
 
-    
     def run(self):
         """
         Run the CLI
@@ -176,18 +187,17 @@ class ElkCliPrompt:
             try:
                 toolbar = create_toolbar_tokens_func(self)
                 text = self._session.prompt(
-                        self.prompt,
-                        completer=elkcliCompleater(self.commands), 
-                        auto_suggest=AutoSuggestFromHistory(),
-                        is_password=False,
-                        key_bindings=bindings,
-                        vi_mode=self.key_bindings == EditingMode.VI,
-                        editing_mode=self.key_bindings,
-                        bottom_toolbar=toolbar
-                        )
+                    self.prompt,
+                    completer=ElkcliCompleater(self.commands),
+                    auto_suggest=AutoSuggestFromHistory(),
+                    is_password=False,
+                    key_bindings=bindings,
+                    vi_mode=self.key_bindings == EditingMode.VI,
+                    editing_mode=self.key_bindings,
+                    bottom_toolbar=toolbar,
+                )
                 self.set_commands(text)
             except KeyboardInterrupt:
                 continue
             except EOFError:
                 break
-

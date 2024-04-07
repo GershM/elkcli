@@ -1,7 +1,8 @@
 from tokenize import DEDENT, ENCODING, ENDMARKER, INDENT, NEWLINE, STRING, tokenize
 from io import BytesIO
 
-#  constructing an Elasticsearch query from SQL components:   
+
+#  constructing an Elasticsearch query from SQL components:
 class QueryParser:
     def __init__(self, size: int = 100):
         self._size = size
@@ -34,14 +35,13 @@ class QueryParser:
         """
         return "{} lines".format(self._size)
 
-
     # 1. Split the query into tokens
     @staticmethod
-    def tokenizer(s: str)->list[str]:
+    def tokenizer(s: str) -> list[str]:
         """
         Tokenize the input string into a list of tokens
 
-        Args: 
+        Args:
             s: input string
 
         Return:
@@ -49,9 +49,9 @@ class QueryParser:
         """
 
         result = []
-        g = tokenize(BytesIO(s.encode('utf-8')).readline)
+        g = tokenize(BytesIO(s.encode("utf-8")).readline)
         for toknum, tokval, _, _, _ in g:
-            if toknum in [ENDMARKER, ENCODING, INDENT,NEWLINE,DEDENT]:
+            if toknum in [ENDMARKER, ENCODING, INDENT, NEWLINE, DEDENT]:
                 continue
             if toknum == STRING and tokval[0] in ["'", '"'] and tokval[0] == tokval[-1]:
                 tokval = tokval[1:-1]
@@ -60,7 +60,9 @@ class QueryParser:
         return result
 
     # 2. Parse the tokens into an Elasticsearch query
-    def __parse_query(self, tokens: list[str])->dict[str, dict[str, list[dict[str, dict[str, list[dict[str, str]]]]]]]:
+    def __parse_query(
+        self, tokens: list[str]
+    ) -> dict[str, dict[str, list[dict[str, dict[str, list[dict[str, str]]]]]]]:
         """
         Parse the tokens into an Elasticsearch query
 
@@ -70,28 +72,22 @@ class QueryParser:
         Return:
         """
 
-        matches = { "bool": { 'must': [] } }
-        matchItem = { "bool":{ "should":[] } }
+        matches = {"bool": {"must": []}}
+        matchItem = {"bool": {"should": []}}
 
         tokenLength = len(tokens)
         for i in range(tokenLength):
             if tokens[i].lower() == "and":
-               matches["bool"]["must"].append(matchItem)
-               matchItem = {
-                   "bool":{
-                       "should":[
-
-                       ]
-                   }
-               }
+                matches["bool"]["must"].append(matchItem)
+                matchItem = {"bool": {"should": []}}
 
             elif tokens[i] in ["=", ">", "<", "<=", ">="]:
-                key = tokens[i-1]
-                value = tokens[i+1]
+                key = tokens[i - 1]
+                value = tokens[i + 1]
 
                 if tokens[i] == "=":
-                    obj ={ key: value }
-                    matchItem["bool"]["should"].append({ "match": obj })
+                    obj = {key: value}
+                    matchItem["bool"]["should"].append({"match": obj})
 
                 elif tokens[i] in [">", "<", "<=", ">="]:
                     opType = ""
@@ -105,17 +101,17 @@ class QueryParser:
                     elif tokens[i] == "<=":
                         opType = "lte"
 
-                    obj = { key: { opType: value } }
-                    matchItem["bool"]["should"].append({ "range": obj })
+                    obj = {key: {opType: value}}
+                    matchItem["bool"]["should"].append({"range": obj})
 
-                i+=1
+                i += 1
 
         if len(matchItem["bool"]["should"]) > 0:
             matches["bool"]["must"].append(matchItem)
 
         return matches
 
-    def handel_objects(self, tokens: list[str])->list[str]:
+    def handel_objects(self, tokens: list[str]) -> list[str]:
         """
         Handle the object tokens
 
@@ -172,16 +168,8 @@ class QueryParser:
         tokens = self.handel_objects(tokens)
         es_query = self.__parse_query(tokens)
 
-        return { 
-                "query": es_query, 
-                "size": self._size,
-                "sort": [
-                    {
-                        "@timestamp": { 
-                                       "order": "desc",
-                                       "unmapped_type": "boolean"
-                                       }
-                        }
-                    ]
-                }
-
+        return {
+            "query": es_query,
+            "size": self._size,
+            "sort": [{"@timestamp": {"order": "desc", "unmapped_type": "boolean"}}],
+        }

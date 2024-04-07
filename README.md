@@ -2,11 +2,11 @@
 ELKCLI is a command-line tool that provides a user-friendly interface for interacting with Elasticsearch, similar to the popular `mycli` application for MySQL databases. It offers a set of commands to perform various operations on Elasticsearch indices, documents, and clusters.
 
 ## Installation
-
+in the project directory execute:
 ```bash
-python3.10 setup.py install
+pip install .
 ```
-    
+
 ## Usage
 
 ```bash
@@ -68,10 +68,10 @@ Available Colors: https://rich.readthedocs.io/en/stable/appendix/colors.html
 
 ## Features
 
-- Index management: Create, delete, and manage Elasticsearch indices.
-- Document operations: Add, update, delete, and search for documents in Elasticsearch.
-- Cluster information: Get information about the Elasticsearch cluster and nodes.
 - Query execution: Execute Elasticsearch queries from the command line.
-- Snapshot and restore: Perform snapshot and restore operations on Elasticsearch indices.
+- (In Progress)Index management: Create, delete, and manage Elasticsearch indices.
+- (In Progress) Document operations: Add, update, delete, and search for documents in Elasticsearch.
+- (In Progress) Cluster information: Get information about the Elasticsearch cluster and nodes.
+- (In Progress) Snapshot and restore: Perform snapshot and restore operations on Elasticsearch indices.
 
 

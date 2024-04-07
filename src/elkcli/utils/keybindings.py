@@ -15,7 +15,7 @@ def key_bindings(elkcli):
     # Create a set of key bindings.
     bindings = KeyBindings()
 
-    @bindings.add('c-t')
+    @bindings.add("c-t")
     def _(event):
         """
         Accept the selected suggestion.
@@ -29,8 +29,7 @@ def key_bindings(elkcli):
         b = event.current_buffer
         b.accept_suggestion()
 
-
-    @bindings.add('f4')
+    @bindings.add("f4")
     def _(event):
         """
         Toggle between Emacs and Vi mode.
@@ -47,6 +46,5 @@ def key_bindings(elkcli):
         else:
             event.app.editing_mode = EditingMode.VI
             elkcli.key_bindings = EditingMode.VI
-
 
     return bindings

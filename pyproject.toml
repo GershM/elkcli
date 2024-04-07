@@ -1,0 +1,43 @@
+[project]
+name = "elkcli"
+dependencies = ["click", "elasticsearch", "rich", "prompt_toolkit"]
+version = "0.0.1"
+# dynamic = ["version"]
+requires-python = ">= 3.7"
+readme = "README.md"
+description = "A CLI tool for interacting with Elasticsearch"
+authors = [
+  {name = "Gena Mirson", email = "mirsongena@gmail.com"},
+]
+keywords = ["elasticsearch", "cli", "tool"]
+classifiers = [
+  # How mature is this project? Common values are
+  #   3 - Alpha
+  #   4 - Beta
+  #   5 - Production/Stable
+  "Development Status :: 3 - Alpha",
+
+  # Indicate who your project is intended for
+  "Intended Audience :: Developers",
+  "Intended Audience :: Support",
+  "Intended Audience :: System Administrators",
+  "Intended Audience :: Information Technology",
+  "Topic :: Software Development :: Build Tools",
+
+  # Specify the Python versions you support here.
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+]
+
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+elkcli = "elkcli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/GershM/elkcli"
+Repository = "https://github.com/GershM/elkcli"
+Issues = "https://github.com/GershM/elkcli/issues"

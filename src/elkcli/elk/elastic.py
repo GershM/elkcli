@@ -2,18 +2,21 @@ from elasticsearch import Elasticsearch, VERSION
 
 from rich import print
 from rich.table import Table
-from utils.spinner import ElkSpinner
 import time
 
-from parsers.logParser import LogParser
-from parsers.query_parser import  QueryParser
+from ..parsers.log_parser import LogParser
+from ..parsers.query_parser import QueryParser
+from ..utils.spinner import ElkSpinner
 
-class Elastic():
+
+class Elastic:
     """
     This class is used to connect to the elastic search and query the data
     """
 
-    def __init__(self, url = "", port = 9200, username = "elastic", password = "", insecure = False) -> None:
+    def __init__(
+        self, url="", port=9200, username="elastic", password="", insecure=False
+    ) -> None:
         self._elk = None
         self._index = ""
 
@@ -82,8 +85,9 @@ class Elastic():
         self.__indexes()
         self.__columns()
 
-
-    def connect(self, url: str, port: int, username: str, password: str, insecure: bool) -> bool:
+    def connect(
+        self, url: str, port: int, username: str, password: str, insecure: bool
+    ) -> bool:
         """
         Connect to the elastic search
 
@@ -129,7 +133,12 @@ class Elastic():
             auth["http_auth"] = (self._username, self._password)
 
         # Connect to the elastic search and try to get information for user validation
-        self._elk = Elasticsearch(self._create_url, verify_certs=not self._insecure, ssl_show_warn=False, **auth )
+        self._elk = Elasticsearch(
+            self._create_url,
+            verify_certs=not self._insecure,
+            ssl_show_warn=False,
+            **auth,
+        )
         self.info()
 
         self.__getsuggest()
@@ -143,7 +152,8 @@ class Elastic():
             The info for the elastic search
         """
 
-        if not self._elk: return None
+        if not self._elk:
+            return None
 
         return self._elk.info()
 
@@ -198,20 +208,26 @@ class Elastic():
             The indexes of the elastic search
         """
         if not self._elk:
-            return 
+            return
 
         if not self._index_list:
-            includes = self._elk.cat.indices(include_unloaded_segments=False, pretty=False, human=True, help=False, format="json")
+            includes = self._elk.cat.indices(
+                include_unloaded_segments=False,
+                pretty=False,
+                human=True,
+                help=False,
+                format="json",
+            )
             for include in includes:
                 index = include["index"]
-                if  not index or index in self._excluded_indexes:
+                if not index or index in self._excluded_indexes:
                     continue
 
                 self._index_list.append(index)
 
             self._index_list = sorted(self._index_list, reverse=True)
 
-    def get_RefreshRate(self)-> str:
+    def get_RefreshRate(self) -> str:
         """
         Get the refresh rate of the elastic search
 
@@ -223,7 +239,7 @@ class Elastic():
 
         return "{} Seconds".format(self._refresh_rate)
 
-    def printOptions(self, option = ""):
+    def printOptions(self, option=""):
         """
         Print the options for the elastic search
 
@@ -243,7 +259,6 @@ class Elastic():
         if option.lower() in ["", "all", "log"]:
             self._logParser.printOptions()
 
-
     def printElasicOptions(self):
         """
         Print the options for the elastic search
@@ -255,7 +270,12 @@ class Elastic():
             Nothing
         """
 
-        elasticOptions = Table(show_header=True, min_width=20,  title="Elastic search Options", header_style="magenta")
+        elasticOptions = Table(
+            show_header=True,
+            min_width=20,
+            title="Elastic search Options",
+            header_style="magenta",
+        )
         elasticOptions.add_column("Option")
         elasticOptions.add_column("Type")
         elasticOptions.add_column("")
@@ -288,7 +308,9 @@ class Elastic():
         if self._useSSL:
             useSSL = "True"
 
-        reqOptions = Table(show_header=False, min_width=50,  title="Server Info", header_style="magenta")
+        reqOptions = Table(
+            show_header=False, min_width=50, title="Server Info", header_style="magenta"
+        )
         reqOptions.add_column("")
         reqOptions.add_column("")
         reqOptions.add_row("Use SSL", useSSL)
@@ -296,7 +318,7 @@ class Elastic():
         reqOptions.add_row("Port", str(self._port))
         reqOptions.add_row("Insecure", insecure)
         reqOptions.add_row("Username", self._username)
-        reqOptions.add_row("Password", "*"*len(self._password))
+        reqOptions.add_row("Password", "*" * len(self._password))
 
         print(reqOptions)
 
@@ -311,7 +333,7 @@ class Elastic():
         Returns:
             Error message if the option is not found
         """
-        if key.lower() == 'pattern':
+        if key.lower() == "pattern":
             self._logParser.setPattern(value)
         elif key.lower() == "color":
             s = value.split(" ")
@@ -343,7 +365,7 @@ class Elastic():
 
             self._queryParser.set_size(int(value))
 
-        elif key.lower() == "index" :
+        elif key.lower() == "index":
             if value == "":
                 print("Index is required")
                 return "Index is required"
@@ -356,7 +378,7 @@ class Elastic():
 
         return ""
 
-    def tables_suggestions(self, text: str) -> list[str]: 
+    def tables_suggestions(self, text: str) -> list[str]:
         """
         Get the suggestions for the elastic search
 
@@ -371,7 +393,11 @@ class Elastic():
         if not self._elk or not self._index_list:
             return []
 
-        return [e for e in self._index_list if e not in self._excluded_indexes and e.startswith(text.lower())]
+        return [
+            e
+            for e in self._index_list
+            if e not in self._excluded_indexes and e.startswith(text.lower())
+        ]
 
     def __columns(self):
         """
@@ -397,7 +423,7 @@ class Elastic():
 
             # self._columns = sorted(self._columns)
 
-    def columns_suggestions(self, text: str) -> list[str]: 
+    def columns_suggestions(self, text: str) -> list[str]:
         """
         Get the suggestions for the elastic search
 
@@ -460,7 +486,11 @@ class Elastic():
         if not self._elk:
             return
 
-        self._elk.snapshot.create(repository="backup", snapshot=snapshot_name, body={"indices": index, "ignore_unavailable": True})
+        self._elk.snapshot.create(
+            repository="backup",
+            snapshot=snapshot_name,
+            body={"indices": index, "ignore_unavailable": True},
+        )
 
     def commit_snapshot(self, snapshot_name: str, index: str):
         """
@@ -477,9 +507,11 @@ class Elastic():
         if not self._elk:
             return
 
-        self._elk.snapshot.create(repository="backup", snapshot=snapshot_name, body={"indices": index})
+        self._elk.snapshot.create(
+            repository="backup", snapshot=snapshot_name, body={"indices": index}
+        )
 
-    def search(self, query: str, is_tail = False):
+    def search(self, query: str, is_tail=False):
         """
         splite the query to commands, fields and message using regex
 
@@ -497,11 +529,13 @@ class Elastic():
         if is_tail:
             self._tail(es_query)
         else:
-            def func(): self._search(es_query)
+
+            def func():
+                self._search(es_query)
 
             self.spinner.start([func], "Searching...", "Done", "Failed!")
 
-    def _search(self, query)-> bool:
+    def _search(self, query) -> bool:
         """
         Search the elastic search
 
@@ -512,11 +546,11 @@ class Elastic():
             Nothing
         """
 
-        if not self._elk: 
+        if not self._elk:
             return False
 
         try:
-            result = self._elk.search(index=self.index, body=query )
+            result = self._elk.search(index=self.index, body=query)
             hits = result["hits"]["hits"]
             hasData = False
             last_printed_index = ""
@@ -527,7 +561,7 @@ class Elastic():
                 #     last_printed_index = hit["_index"]
                 log = ""
                 source = hit["_source"]
-                if "event" not in source: 
+                if "event" not in source:
                     log = f"level=\"{source['status']}\" msg=\"{source['message']}\""
                     if "ansible_result" in source:
                         log += f" ansible_result=\"{source['ansible_result']}\""
@@ -560,16 +594,19 @@ class Elastic():
         timestemp = time.time()
         date = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(timestemp))
 
-        filter = { "filter": [ { "range": { "@timestamp": { "gte": f"{date}" } } } ] }
-        query["query"]["bool"]['filter'] = filter["filter"]
+        filter = {"filter": [{"range": {"@timestamp": {"gte": f"{date}"}}}]}
+        query["query"]["bool"]["filter"] = filter["filter"]
 
         while True:
             hasData = self._search(query)
             if hasData:
                 timestemp = time.time()
                 date = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(timestemp))
-                query["query"]["bool"]['filter'][0]["range"]["@timestamp"]["gte"] = f"{date}"
+                query["query"]["bool"]["filter"][0]["range"]["@timestamp"][
+                    "gte"
+                ] = f"{date}"
             time.sleep(self._refresh_rate)
+
 
 def connect(username: str, password: str, url: str, port: int, insecure: bool):
     """
@@ -581,5 +618,6 @@ def connect(username: str, password: str, url: str, port: int, insecure: bool):
     Returns:
         Nothing
     """
-    import globals_
-    globals_.elk = Elastic(url, port, username, password, insecure)
+    import elkcli.globals as globals
+
+    globals.ELK = Elastic(url, port, username, password, insecure)

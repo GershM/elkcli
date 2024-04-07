@@ -6,9 +6,10 @@ from rich import print as rprint
 
 import re
 
+
 class LogParser:
     def __init__(self) -> None:
-        self.logPattern =  "level=\"(.*?)\""
+        self.logPattern = 'level="(.*?)"'
         self.logColorMap = {
             "emergency": "black on red",
             "alert": "black on orange3",
@@ -20,7 +21,6 @@ class LogParser:
             "info": "blue",
             "debug": "green",
             "trace": "magenta",
-
             "ok": "green",
             "failed": "red",
             "changed": "yellow",
@@ -28,8 +28,7 @@ class LogParser:
             "skipped": "blue",
             "rescued": "green",
             "ignored": "blue",
-
-            "default": "white"
+            "default": "white",
         }
 
     def setPattern(self, pattern: str):
@@ -44,14 +43,18 @@ class LogParser:
         """
         Print the options for the log parser
         """
-        elasticOptions = Table(show_header=True, min_width=20,  title="Log Parser", header_style="magenta")
+        elasticOptions = Table(
+            show_header=True, min_width=20, title="Log Parser", header_style="magenta"
+        )
         elasticOptions.add_column("Option")
         elasticOptions.add_column("Type")
         elasticOptions.add_column("", min_width=20)
 
         elasticOptions.add_row("Pattern", "String", self.logPattern)
-        colorMap = "\n".join([f"{key}: {value}" for key, value in self.logColorMap.items()])
-        elasticOptions.add_row("Error Code Style", "Array",colorMap)
+        colorMap = "\n".join(
+            [f"{key}: {value}" for key, value in self.logColorMap.items()]
+        )
+        elasticOptions.add_row("Error Code Style", "Array", colorMap)
 
         rprint(elasticOptions)
 
